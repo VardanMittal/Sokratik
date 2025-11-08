@@ -11,6 +11,7 @@ from transformers import (
 )
 from peft import LoraConfig
 from trl import SFTTrainer
+import mlflow
 
 # --- CONFIGURATION ---
 MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
@@ -38,7 +39,6 @@ model = AutoModelForCausalLM.from_pretrained(
     quantization_config=bnb_config,
     device_map="auto",
     use_cache=False, # Required for training, must be True for inference later
-    attn_implementation="flash_attention_2" # Speeds up training on T4/A100
 )
 model.config.pretraining_tp = 1
 
@@ -56,6 +56,9 @@ peft_config = LoraConfig(
     task_type="CAUSAL_LM",
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"] # Target all linear layers for best results
 )
+# --- MLOPS: MLFLOW SETUP ---
+
+mlflow.set_experiment("project-Sokratik-Finetuning")
 
 # --- 4. TRAINING ARGUMENTS ---
 # These control the hyperparameters. We'll tweak these later.
@@ -76,7 +79,8 @@ training_arguments = TrainingArguments(
     warmup_ratio=0.03,
     group_by_length=True,        # Speeds up training by grouping similar length text
     lr_scheduler_type="constant",
-    report_to="tensorboard"
+    report_to="mlflow",       # <--- Switch to MLflow here
+    run_name="run-1-llama3-8b" # Give the run a name
 )
 
 # --- 5. THE TRAINER ---
