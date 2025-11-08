@@ -2,7 +2,7 @@ import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 
 # The model ID for Llama 3
-model_id = "meta-llama/Llama-3-8B-Instruct"
+model_id = "meta-llama/Llama-3.1-8B-Instruct"
 
 # This is the 4-bit quantization configuration
 # It tells transformers to load the model in 4-bits
@@ -26,7 +26,7 @@ model = AutoModelForCausalLM.from_pretrained(
 )
 
 # --- Run the Baseline Check ---
-prompt_text = "I'm feeling very anxious about an interview tomorrow. What should I do?"
+prompt_text = "I'm feeling very anxious about an interview about my life. What should I do?"
 
 # Llama 3 uses a specific chat template.
 # We must use it, or the model's answers will be low-quality.
