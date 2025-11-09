@@ -1,0 +1,10 @@
+--- PROMPT ---
+I'm feeling very anxious about an interview about my life. What should I do?
+
+--- LLAMA 3 8B RESPONSE ---
+1.  **Understand the purpose of the interview**: Before the interview, clarify the purpose of the discussion. Is it a life story, a biography, or a Q&A session? Knowing the context will help you focus your preparation.
+2.  **Prepare your story**: Think about your life experiences, accomplishments, and challenges. Consider the key events, people, and lessons that have shaped who you are today. Organize your thoughts in a way that feels natural and easy to share.
+3.  **Focus on your strengths and accomplishments**: Emphasize your achievements, skills, and qualities that you're proud of. Highlighting your strengths will help you feel more confident and showcase your positive aspects.
+4.  **Be authentic and honest**: Share your genuine feelings and experiences. Authenticity is key to building trust and connection with your interviewer. Be open and transparent about your struggles and vulnerabilities.
+5.  **Practice relaxation techniques**: Take some time to practice relaxation techniques, such as deep breathing, progressive muscle relaxation, or meditation. These will help calm your nerves and reduce anxiety.
+6.  **
