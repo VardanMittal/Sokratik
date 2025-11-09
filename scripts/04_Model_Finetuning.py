@@ -15,7 +15,7 @@ import mlflow
 
 # --- CONFIGURATION ---
 MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
-BASEFILE = os.path.join(os.path.abspath(__file__), "..")
+BASEFILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 DATASET_FILE = os.path.join(BASEFILE,"data/final/train.jsonl")
 NEW_MODEL_NAME = "Sokratik-v1"
 OUTPUT_DIR = os.path.join(BASEFILE,"results/") # Where checkpoints will be saved
