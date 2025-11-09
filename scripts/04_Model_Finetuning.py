@@ -10,7 +10,7 @@ from transformers import (
     logging,
 )
 from peft import LoraConfig
-from trl import SFTTrainer
+from trl import SFTTrainer, SFTConfig
 import mlflow
 
 # --- CONFIGURATION ---
@@ -46,62 +46,69 @@ tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 tokenizer.pad_token = tokenizer.eos_token
 tokenizer.padding_side = "right" # Crucial for Llama to train correctly
 
-# --- 3. CONFIGURE LoRA ---
-# This defines the tiny "adapters" we will actually train
+# --- 4. CONFIGURE LoRA ---
 peft_config = LoraConfig(
-    lora_alpha=16, # How much weight to give the new adapters
+    lora_alpha=16,
     lora_dropout=0.1,
-    r=64,          # The size of the adapters (larger = smarter but slower)
+    r=16, ### VRAM FIX 1: Reduced LoRA Rank from 64 to 16. (Fewer trainable params)
     bias="none",
     task_type="CAUSAL_LM",
-    target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"] # Target all linear layers for best results
+    target_modules=[
+        "q_proj", "k_proj", "v_proj", "o_proj",
+        "gate_proj", "up_proj", "down_proj"
+    ]
 )
-# --- MLOPS: MLFLOW SETUP ---
 
-mlflow.set_experiment("project-Sokratik-Finetuning")
+# --- 5. SFT CONFIG (Replaces TrainingArguments) ---
+# This object now holds ALL training and dataset parameters.
+sft_config = SFTConfig(
+    # --- Args that moved ---
+    dataset_text_field="text",
+    max_length=1024,              ### VRAM FIX 2: Reduced Max Length from 2048 to 1024. (Big memory save)
+    packing=False,
 
-# --- 4. TRAINING ARGUMENTS ---
-# These control the hyperparameters. We'll tweak these later.
-training_arguments = TrainingArguments(
+    # --- Standard Training Args ---
     output_dir=OUTPUT_DIR,
-    num_train_epochs=1,          # START SMALL! 1 epoch to test if it works.
-    per_device_train_batch_size=4, # Keep small for Colab GPU VRAM
-    gradient_accumulation_steps=4, # Simulates larger batch size (4*4 = 16)
-    optim="paged_adamw_32bit",   # Memory-efficient optimizer
-    save_steps=50,               # Save a checkpoint every 50 steps
-    logging_steps=10,            # Log metrics every 10 steps
-    learning_rate=2e-4,          # Standard starting rate for QLoRA
+    num_train_epochs=1,
+    per_device_train_batch_size=1, ### VRAM FIX 3: Reduced Batch Size from 4 to 1. (Smallest possible)
+    gradient_accumulation_steps=16,### VRAM FIX 4: Increased Accumulation from 4 to 16. (Keeps effective batch size 1*16=16)
+    gradient_checkpointing=True,   ### VRAM FIX 5: Enable Gradient Checkpointing. (Trades compute for memory)
+    gradient_checkpointing_kwargs={"use_reentrant": False}, # Silences a warning
+    
+    optim="paged_adamw_32bit",
+    save_steps=50,
+    logging_steps=10,
+    learning_rate=2e-4,
     weight_decay=0.001,
-    fp16=True,                   # Use mixed precision training (faster, less memory)
-    bf16=False,                  # T4 GPU doesn't support pure BF16 well, use FP16
+    fp16=True,
+    bf16=False,
     max_grad_norm=0.3,
     max_steps=-1,
     warmup_ratio=0.03,
-    group_by_length=True,        # Speeds up training by grouping similar length text
+    group_by_length=True,
     lr_scheduler_type="constant",
-    report_to="mlflow",       # <--- Switch to MLflow here
-    run_name="run-1-llama3-8b" # Give the run a name
+    
+    # --- MLOps ---
+    report_to="mlflow",
+    run_name="run-1-llama3-8b-stoic"
 )
 
-# --- 5. THE TRAINER ---
-# SFTTrainer handles the heavy lifting of the training loop
+# --- 6. THE TRAINER ---
 trainer = SFTTrainer(
     model=model,
     train_dataset=dataset,
     peft_config=peft_config,
-    dataset_text_field="text", # The column name in our JSONL file
-    max_seq_length=None,       # Auto-detect max length
-    tokenizer=tokenizer,
-    args=training_arguments,
-    packing=False,
+    processing_class=tokenizer,
+    args=sft_config,
 )
 
-# --- 6. START TRAINING ---
-print("Starting training...")
+# --- 7. START TRAINING ---
+print("Starting model training...")
 trainer.train()
+print("Training complete!")
 
-# --- 7. SAVE THE MODEL ---
+# --- 8. SAVE THE MODEL ---
 print(f"Saving model to {NEW_MODEL_NAME}...")
 trainer.model.save_pretrained(NEW_MODEL_NAME)
 tokenizer.save_pretrained(NEW_MODEL_NAME)
-print("DONE!")
+print("Model saved locally.")

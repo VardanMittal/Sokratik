@@ -1,0 +1,14 @@
+artifact_uri: file:///content/Sokratik/mlruns/635898513622005938/563cf7c0108d453cb81c89418d00bae7/artifacts
+end_time: 1762713443691
+entry_point_name: ''
+experiment_id: '635898513622005938'
+lifecycle_stage: active
+run_id: 563cf7c0108d453cb81c89418d00bae7
+run_name: run-1-llama3-8b
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1762713437008
+status: 3
+tags: []
+user_id: root

@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/3ffed19f0a084d028cc7a4609b368e43/artifacts
+end_time: 1762715147090
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 3ffed19f0a084d028cc7a4609b368e43
+run_name: run-1-llama3-8b-stoic
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1762713768317
+status: 3
+tags: []
+user_id: root
