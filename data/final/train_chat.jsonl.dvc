@@ -1,0 +1,5 @@
+outs:
+- md5: ce68c7e23f149f47bae4a9770db9c5ba
+  size: 1458637
+  hash: md5
+  path: train_chat.jsonl
