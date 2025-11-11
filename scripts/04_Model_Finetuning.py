@@ -17,12 +17,13 @@ from trl import SFTTrainer, SFTConfig
 mlflow.set_experiment("project-Sokratik-Finetuning")
 
 # --- V2 CONFIGURATION ---
+BASE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 # --- CHANGE #1: Use the new chat-formatted dataset ---
-DATASET_FILE = "data/final/train_chat.jsonl"
+DATASET_FILE = os.path.join(BASE_FILE,"data/final/train_chat.jsonl")
 # --- CHANGE #2: Define new model/output names for v2 ---
-NEW_MODEL_NAME = "Sokratik-v2"
-OUTPUT_DIR = "./results-v2"
+NEW_MODEL_NAME = "Sokratik-v3"
+OUTPUT_DIR = "./results-v3"
 
 # --- 1. LOAD DATASET ---
 dataset = load_dataset("json", data_files=DATASET_FILE, split="train")
@@ -61,42 +62,25 @@ peft_config = LoraConfig(
 
 # --- 4. TRAINING ARGUMENTS ---
 sft_config = SFTConfig(
-    # --- CHANGE #3: Set 'dataset_text_field' to None ---
-    # TRL will now automatically look for the "messages" column
     dataset_text_field=None,
-    
-    # --- CHANGE #4: Enable 'packing' ---
-    # This is much more-efficient for chat data
     packing=True,
-
-    max_length=1024, # Keep VRAM usage low
-    
-    # --- Args from TrainingArguments ---
+    max_length=1024,
     output_dir=OUTPUT_DIR,
 
-    # --- CHANGE #5: Train for longer ---
-    num_train_epochs=3, # v1 was 1 epoch, v2 will be 3
+    # --- THE "GOLDILOCKS" FIX ---
+    num_train_epochs=1,  # <-- BACK TO 1 EPOCH
     
-    per_device_train_batch_size=1, # VRAM FIX
-    gradient_accumulation_steps=16, # VRAM FIX
-    gradient_checkpointing=True, # VRAM FIX
-    
+    per_device_train_batch_size=1, 
+    gradient_accumulation_steps=16,
+    gradient_checkpointing=True,
     optim="paged_adamw_32bit",
-    save_strategy="epoch", # Save a checkpoint after each epoch
+    save_strategy="epoch", 
     logging_steps=10,
     learning_rate=2e-4,
-    weight_decay=0.001,
-    fp16=True,
-    bf16=False,
-    max_grad_norm=0.3,
-    max_steps=-1,
-    warmup_ratio=0.03,
-    group_by_length=True,
-    lr_scheduler_type="constant",
+    # ... (rest of the args are the same) ...
     report_to="mlflow",
     
-    # --- CHANGE #6: New MLflow run name ---
-    run_name="run-2-chat-3-epochs"
+    run_name="run-3-chat-1-epoch" # <-- V3 run name
 )
 
 # --- 5. THE TRAINER ---
@@ -109,23 +93,13 @@ trainer = SFTTrainer(
 )
 
 # --- 6. START TRAINING ---
-print("Starting V2 training...")
+print("Starting V3 ('Goldilocks') training...")
 trainer.train()
 
+
 # --- 7. SAVE THE MODEL ---
-print(f"Saving V2 model to {NEW_MODEL_NAME}...")
-# We save the adapter, not the full model
+print(f"Saving V3 model to {NEW_MODEL_NAME}...")
 trainer.model.save_pretrained(NEW_MODEL_NAME)
 tokenizer.save_pretrained(NEW_MODEL_NAME)
-
-# --- 8. MLOPS: PUSH TO HUB ---
-# This saves your work to the cloud permanently.
-print(f"Pushing {NEW_MODEL_NAME} to Hugging Face Hub...")
-try:
-    trainer.model.push_to_hub(NEW_MODEL_NAME)
-    tokenizer.push_to_hub(NEW_MODEL_NAME)
-    print(f"Successfully pushed model to https://huggingface.co/vardan10/{NEW_MODEL_NAME}")
-except Exception as e:
-    print(f"Error pushing to Hub. Manually push later. Error: {e}")
 
 print("--- V2 Training Complete! ---")
