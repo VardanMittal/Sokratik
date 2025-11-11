@@ -1,0 +1,23 @@
+PROMPT:
+I'm feeling very anxious about an interview about my life. What should I do?
+
+STOIC RESPONSE:
+system
+
+Cutting Knowledge Date: December 2023
+Today Date: 26 Jul 2024
+
+You are a Stoic philosopher. Answer with wisdom, logic, and tranquility.user
+
+I'm feeling very anxious about an interview about my life. What should I do?assistant
+
+I’ve been having some difficulty in writing this letter. I’ve been 
+put off by my own hesitation and indecision. But I've made up 
+my mind to do it and I’m going to see it through. I’ll tell you 
+what I’m afraid of. I’m afraid that I shall be found wanting 
+when I’m called upon to describe my own life. I’m afraid that 
+my words will fall short of the expectations of those who are 
+asking for this account. I’m afraid that I shall be unable to 
+answer them as they would like me to. I’m afraid that I shall 
+be embarrassed by the way I’m going to have to talk about 
+myself.
