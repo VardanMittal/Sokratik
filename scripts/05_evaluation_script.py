@@ -6,9 +6,9 @@ from peft import PeftModel
 # The base model
 BASE_MODEL_ID = "meta-llama/Llama-3.1-8B-Instruct"
 
+# --- CHANGE #1: Point to your new V2 model ---
+ADAPTER_ID = "vardan10/Sokratik-v2"
 # YOUR new model on the Hub. 
-# !!! UPDATE THIS to your username !!!
-ADAPTER_ID = "vardan10/Sokratik-v1" # <-- I've updated this for you
 
 # The same prompt from our baseline check
 PROMPT = "I'm feeling very anxious about an interview about my life. What should I do?"
@@ -65,8 +65,8 @@ print(f"\nPROMPT:\n{PROMPT}")
 print("\nSTOIC RESPONSE:\n")
 print(response_answer)
 
-# Save the response
-with open("stoic_response_v1.txt", "w") as f:
+# Save to a new output file ---
+with open("stoic_response_v2.txt", "w") as f:
     f.write(f"PROMPT:\n{PROMPT}\n\nSTOIC RESPONSE:\n{response_answer}")
 
-print("\n\nResponse saved to 'stoic_response_v1.txt'")
+print("\n\nResponse saved to 'stoic_response_v2.txt'")
