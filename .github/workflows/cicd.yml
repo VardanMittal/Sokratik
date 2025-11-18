@@ -2,9 +2,9 @@ name: Sokratik CI/CD Pipeline
 
 on:
   push:
-    branches: ["master"]
+    branches: ["master"] # Updated to match your branch
   pull_request:
-    branches: ["master"]
+    branches: ["master"] # Updated to match your branch
 
 jobs:
   # --- JOB 1: THE GATEKEEPER (CI) ---
@@ -32,9 +32,8 @@ jobs:
   # --- JOB 2: THE SHIPPER (CD) ---
   deploy-to-hub:
     runs-on: ubuntu-latest
-    # This line now works because 'quality-check' is in THIS file!
     needs: quality-check
-    # Only run deployment on pushes to main (not on pull requests)
+    # Only run deployment on pushes to master
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
     steps:
@@ -46,11 +45,16 @@ jobs:
       - name: Push to Hugging Face Spaces
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          # UPDATE THESE IF NEEDED:
+          # Your username and space name
           HF_USERNAME: vardan10
           SPACE_NAME: Sokratik-API
         run: |
           git config --global user.email "actions@github.com"
           git config --global user.name "GitHub Actions"
+
+          # Add the Hugging Face remote
           git remote add space https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$SPACE_NAME
-          git push --force space main
+
+          # --- THE FIX ---
+          # "HEAD:main" maps your current branch (master) to the remote's main branch.
+          git push --force space HEAD:main
