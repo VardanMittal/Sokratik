@@ -1,0 +1,14 @@
+artifact_uri: file:///content/Sokratik/mlruns/635898513622005938/712dc85448a9474c8c97516e8db8355e/artifacts
+end_time: 1763449628961
+entry_point_name: ''
+experiment_id: '635898513622005938'
+lifecycle_stage: active
+run_id: 712dc85448a9474c8c97516e8db8355e
+run_name: run-3-chat-1-epoch-resumable
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1763443076724
+status: 3
+tags: []
+user_id: root

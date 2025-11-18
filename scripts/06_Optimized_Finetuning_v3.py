@@ -14,19 +14,17 @@ from trl import SFTTrainer, SFTConfig
 # --- MLOPS: MLFLOW SETUP ---
 mlflow.set_experiment("project-Sokratik-Finetuning")
 
-# --- V3 OPTIMIZED CONFIGURATION ---
-BASE_FILE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# --- V3 CONFIGURATION ---
+BASE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)),"..")
 MODEL_NAME = "meta-llama/Llama-3.1-8B-Instruct"
 DATASET_FILE = os.path.join(BASE_FILE, "data/final/train_chat.jsonl")
-NEW_MODEL_NAME = "Sokratik-v3-optimized" # New model name
-OUTPUT_DIR = os.path.join(BASE_FILE, "results-v3-optimized") # New checkpoint dir
+NEW_MODEL_NAME = "Sokratik-v3"
+OUTPUT_DIR = os.path.join(BASE_FILE, "results-v3") # Checkpoints save here
 
 # --- 1. LOAD DATASET ---
-# --- OPTIMIZATION #1: STREAMING ---
-# This loads the dataset as an IterableDataset, reading from disk
-# instead of loading the whole file into RAM.
-dataset = load_dataset("json", data_files=DATASET_FILE, split="train", streaming=True)
-print("Loaded dataset in streaming mode.")
+# We load the full dataset. This is fine since RAM is not the issue.
+dataset = load_dataset("json", data_files=DATASET_FILE, split="train")
+print(f"Loaded {len(dataset)} chat-formatted training examples.")
 
 # --- 2. LOAD BASE MODEL (QUANTIZED) ---
 bnb_config = BitsAndBytesConfig(
@@ -35,7 +33,7 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_compute_dtype=torch.float16,
     bnb_4bit_use_double_quant=False,
 )
-# ... (model loading code is the same) ...
+
 model = AutoModelForCausalLM.from_pretrained(
     MODEL_NAME,
     quantization_config=bnb_config,
@@ -44,7 +42,7 @@ model = AutoModelForCausalLM.from_pretrained(
     attn_implementation=None,
 )
 model.config.pretraining_tp = 1
-# ... (tokenizer loading code is the same) ...
+
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 tokenizer.pad_token = tokenizer.eos_token
 tokenizer.padding_side = "right"
@@ -53,8 +51,7 @@ tokenizer.padding_side = "right"
 peft_config = LoraConfig(
     lora_alpha=16,
     lora_dropout=0.1,
-    # --- OPTIMIZATION #2: Lower LoRA Rank ---
-    r=8, # Was 16, now 8. Trains fewer params, uses less VRAM.
+    r=16, # Back to 16, since VRAM wasn't the issue
     bias="none",
     task_type="CAUSAL_LM",
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
@@ -63,23 +60,24 @@ peft_config = LoraConfig(
 # --- 4. TRAINING ARGUMENTS ---
 sft_config = SFTConfig(
     dataset_text_field=None,
-    packing=True,
+    packing=True, # Packing is fine, the warnings are just warnings
     max_length=1024,
     output_dir=OUTPUT_DIR,
-    num_train_epochs=1,
+    num_train_epochs=1, # Our "Goldilocks" 1 epoch
     per_device_train_batch_size=1, 
     gradient_accumulation_steps=16,
     gradient_checkpointing=True,
     optim="paged_adamw_32bit",
     
-    save_strategy="steps",
-    save_steps=25,
-    save_total_limit=3,
+    # --- CHECKPOINTING STRATEGY ---
+    save_strategy="steps",     # Save based on steps
+    save_steps=25,             # Save a checkpoint every 25 steps
+    save_total_limit=3,        # Only keep the 3 most recent checkpoints
     
     logging_steps=10,
     learning_rate=2e-4,
     report_to="mlflow",
-    run_name="run-4-chat-1-epoch-optimized" # New run name
+    run_name="run-3-chat-1-epoch-resumable"
 )
 
 # --- 5. THE TRAINER ---
@@ -91,20 +89,27 @@ trainer = SFTTrainer(
     args=sft_config,
 )
 
-# --- 6. START TRAINING (WITH RESUME) ---
-# ... (The resume logic is the same) ...
-print("Starting V3 (Optimized) training...")
+# --- 6. START TRAINING (WITH ROBUST RESUME) ---
+print("Starting V3 ('Goldilocks') training...")
+
+# --- THIS IS THE FIX ---
+# Check if output_dir exists and has a checkpoint
 resume_from_checkpoint = False
 if os.path.exists(sft_config.output_dir):
     checkpoints = [d for d in os.listdir(sft_config.output_dir) if d.startswith("checkpoint-")]
     if len(checkpoints) > 0:
-        print(f"Found {len(checkpoints)} existing checkpoints. Resuming from latest.")
-        resume_from_checkpoint = True
+        # Sort checkpoints by step number (e.g., checkpoint-50)
+        latest_checkpoint = sorted(checkpoints, key=lambda x: int(x.split('-')[-1]))[-1]
+        resume_path = os.path.join(sft_config.output_dir, latest_checkpoint)
+        print(f"Found existing checkpoint. Resuming from: {resume_path}")
+        resume_from_checkpoint = resume_path
     else:
         print("Output directory exists but no checkpoints found. Starting from scratch.")
 else:
     print("No output directory found. Starting from scratch.")
 
+# Call train() with the correct resume flag
+# This will be `False` on the first run, and a path string on subsequent runs
 trainer.train(resume_from_checkpoint=resume_from_checkpoint)
 
 # --- 7. SAVE THE FINAL MODEL ---
@@ -112,16 +117,15 @@ print(f"Saving final V3 model to {NEW_MODEL_NAME}...")
 trainer.model.save_pretrained(NEW_MODEL_NAME)
 tokenizer.save_pretrained(NEW_MODEL_NAME)
 
-print("--- V3 Optimized Training Complete! ---")
+print("--- V3 Training Complete! ---")
 
 # --- 8. MLOPS: PUSH TO HUB ---
-# ... (The push-to-hub logic is the same, just update the names) ...
 print(f"Pushing {NEW_MODEL_NAME} to Hugging Face Hub...")
 try:
     hf_token = None
     try:
         from google.colab import userdata
-        hf_token = userdata.get('HF_WRITE_TOKEN')
+        hf_token = userdata.get('COLAB_WRITE')
     except ImportError:
         hf_token = os.environ.get("HF_TOKEN")
 
@@ -133,7 +137,7 @@ try:
 
         api = HfApi(token=hf_token)
         api.upload_folder(
-            folder_path=NEW_MODEL_NAME, # Upload the new optimized model
+            folder_path=NEW_MODEL_NAME,
             repo_id=hf_model_repo,
             path_in_repo="."
         )
