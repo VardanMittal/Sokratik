@@ -35,7 +35,7 @@ jobs:
     # This line now works because 'quality-check' is in THIS file!
     needs: quality-check
     # Only run deployment on pushes to main (not on pull requests)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/checkout@v3
