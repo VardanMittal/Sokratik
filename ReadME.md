@@ -1,10 +1,10 @@
 ---
-title: Sokratik API
-emoji: 🏛️
-colorFrom: gray
-colorTo: blue
-sdk: docker
-app_file: DOCKERFILE
+title: "Sokratik API"
+emoji: "🏛️"
+colorFrom: "gray"
+colorTo: "blue"
+sdk: "docker"
+app_file: "Dockerfile"
 pinned: false
 ---
 
