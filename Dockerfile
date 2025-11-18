@@ -5,18 +5,20 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # 3. Copy requirements first (Caching Layer)
-# Docker checks this layer first. If requirements.txt hasn't changed,
-# it skips installing libraries again, making builds super fast.
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 4. Copy the actual application code
-# We do this last because code changes often.
+# 4. Copy the application code
 COPY ./app ./app
+COPY ./frontend ./frontend
+COPY start.sh .
 
-# 5. Expose the port (Standard for FastAPI)
+# 5. Make the start script executable
+# This is critical for Linux containers
+RUN chmod +x start.sh
+
+# 6. Expose port 7860 (Required by Hugging Face Spaces)
 EXPOSE 7860
 
-# 6. Run the Server
-# Note: Hugging Face Spaces specifically expects port 7860
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# 7. Run the start script
+CMD ["./start.sh"]

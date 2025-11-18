@@ -16,3 +16,4 @@ langchain
 langchain-community
 chromadb
 sentence-transformers
+streamlit
