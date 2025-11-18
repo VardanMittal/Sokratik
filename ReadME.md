@@ -1,3 +1,13 @@
+---
+title: Sokratik API
+emoji: 🏛️
+colorFrom: gray
+colorTo: blue
+sdk: docker
+pinned: false
+app_port: 7860
+---
+
 # 🏛️ SOKRATIK — The Stoic LLM
 
 > _"Man is not worried by real problems so much as by his imagined anxieties about real problems."_  
