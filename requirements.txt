@@ -9,3 +9,6 @@ transformers
 datasets
 peft
 pyngrok
+fastapi
+pydantic
+uvicorn
