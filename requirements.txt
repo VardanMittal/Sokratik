@@ -12,3 +12,7 @@ pyngrok
 fastapi
 pydantic
 uvicorn
+langchain
+langchain-community
+chromadb
+sentence-transformers

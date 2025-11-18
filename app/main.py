@@ -34,7 +34,6 @@ async def lifespan(app: FastAPI):
         BASE_MODEL_ID,
         quantization_config=bnb_config,
         device_map="auto",
-        llm_int8_enable_fp32_cpu_offload=True,
         token=HF_TOKEN  # <-- CRITICAL FIX
     )
     
