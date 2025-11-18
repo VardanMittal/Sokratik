@@ -4,8 +4,8 @@ emoji: 🏛️
 colorFrom: gray
 colorTo: blue
 sdk: docker
+app_file: DOCKERFILE
 pinned: false
-app_port: 7860
 ---
 
 # 🏛️ SOKRATIK — The Stoic LLM
