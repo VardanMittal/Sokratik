@@ -12,6 +12,8 @@ pyngrok
 fastapi
 pydantic
 uvicorn
+langgraph
+langsmith
 langchain
 langchain-community
 chromadb
