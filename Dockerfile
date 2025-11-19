@@ -1,24 +1,23 @@
-# 1. Start from a lightweight, official Python image
 FROM python:3.12-slim
 
-# 2. Set the working directory inside the container
 WORKDIR /app
 
-# 3. Copy requirements first (Caching Layer)
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Install system build tools (needed for some python packages)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# 4. Copy the application code
+COPY requirements.txt .
+# Increase timeout because downloading packages can be slow
+RUN pip install --no-cache-dir -r requirements.txt --timeout 100
+
 COPY ./app ./app
 COPY ./frontend ./frontend
 COPY start.sh .
 
-# 5. Make the start script executable
-# This is critical for Linux containers
 RUN chmod +x start.sh
 
-# 6. Expose port 7860 (Required by Hugging Face Spaces)
 EXPOSE 7860
 
-# 7. Run the start script
 CMD ["./start.sh"]
