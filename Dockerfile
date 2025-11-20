@@ -24,10 +24,6 @@ RUN wget https://github.com/abetlen/llama-cpp-python/releases/download/v0.2.90/l
 
 # 6. Copy app code
 COPY ./app ./app
-COPY ./frontend ./frontend
-COPY start.sh .
 
-# 7. Permissions and Run
-RUN chmod +x start.sh
-EXPOSE 7860
-CMD ["./start.sh"]
+# 7. Run Uvicorn directly
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
