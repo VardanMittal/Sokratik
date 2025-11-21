@@ -1,46 +1,29 @@
-# ---------------------------------------------------------
-# 1. Use full Debian Python (NOT slim)
-# ---------------------------------------------------------
-FROM python:3.10
+# 1. START FROM THE OFFICIAL IMAGE
+# This image has Linux + Python + llama-cpp-python pre-installed and compiled.
+# We don't need to build anything!
+FROM ghcr.io/abetlen/llama-cpp-python:latest
 
-# ---------------------------------------------------------
-# 2. Working directory
-# ---------------------------------------------------------
+# 2. Set working directory
 WORKDIR /app
 
-# ---------------------------------------------------------
-# 3. Install system dependencies
-# ---------------------------------------------------------
+# 3. Install system tools (just in case)
 RUN apt-get update && apt-get install -y \
     build-essential \
-    cmake \
-    libopenblas-dev \
-    wget \
-    git \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# ---------------------------------------------------------
-# 4. Install Python dependencies
-# (requirements.txt should NOT contain torch or bitsandbytes)
-# ---------------------------------------------------------
+# 4. Install YOUR requirements
+# Since we removed llama-cpp from this file, this step will be super fast.
 COPY requirements.txt .
-RUN pip install --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# ---------------------------------------------------------
-# 5. Install llama-cpp-python using the official CPU wheel repo
-# (pip will automatically select correct manylinux wheel)
-# ---------------------------------------------------------
-RUN pip install llama-cpp-python\
-    --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
-
-# ---------------------------------------------------------
-# 6. Copy your application code
-# ---------------------------------------------------------
+# 5. Copy your code
 COPY ./app ./app
+COPY ./modules ./modules
+COPY ./data ./data
 
-# ---------------------------------------------------------
-# 7. Expose port + run API
-# ---------------------------------------------------------
+# 6. Expose port
 EXPOSE 7860
+
+# 7. Run the app
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
