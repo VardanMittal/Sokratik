@@ -1,10 +1,4 @@
-torch
-bitsandbytes 
-accelerate 
-mlflow 
-trl 
 dvc[gdrive]
-pydrive2
 transformers
 datasets
 peft
