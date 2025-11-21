@@ -1,15 +1,13 @@
-dvc[gdrive]
-transformers
-datasets
-peft
-pyngrok
+huggingface_hub
 fastapi
+uvicorn[standard]
 pydantic
-uvicorn
-langgraph
-langsmith
+streamlit
+
+# --- RAG Dependencies ---
 langchain
 langchain-community
-langchain-text-splitters
+langgraph
 chromadb
-sentence-transformers 
+sentence-transformers
+langsmith

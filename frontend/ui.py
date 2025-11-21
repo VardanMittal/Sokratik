@@ -1,63 +1,62 @@
 import streamlit as st
 import requests
-import os
 
 # --- CONFIGURATION ---
-# When running in Docker, both services are in the same container.
-# But Streamlit runs on port 8501, FastAPI on 7860.
-# We need to tell Streamlit where the API is.
-API_URL = os.getenv("API_URL", "http://localhost:7860")
+# REPLACE THIS with your actual Backend Space URL
+# It usually looks like: https://vardan10-sokratik-api.hf.space
+BACKEND_URL = "https://vardan10-sokratik-api.hf.space" 
 
-# --- PAGE SETUP ---
-st.set_page_config(
-    page_title="Sokratik",
-    page_icon="🏛️",
-    layout="centered"
-)
+st.set_page_config(page_title="Sokratik", page_icon="🏛️")
 
 # --- HEADER ---
 st.title("🏛️ SOKRATIK")
-st.caption("Speak with the wisdom of the Stoics.")
+st.caption(f"RAG Agent • Connected to Brain at: {BACKEND_URL}")
 
 # --- SESSION STATE ---
-# We need to remember the chat history
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Greetings. I am ready to discuss life, virtue, and the nature of things. What is on your mind?"}
+        {"role": "assistant", "content": "I am ready. Ask me about the Stoics."}
     ]
 
-# --- DISPLAY CHAT HISTORY ---
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
+# --- CHAT HISTORY ---
+for msg in st.session_state.messages:
+    st.chat_message(msg["role"]).write(msg["content"])
 
 # --- USER INPUT ---
-if prompt := st.chat_input("Ask your question..."):
-    # 1. Display user message
-    with st.chat_message("user"):
-        st.markdown(prompt)
+if prompt := st.chat_input("What is on your mind?"):
+    # 1. Show User Message
     st.session_state.messages.append({"role": "user", "content": prompt})
+    st.chat_message("user").write(prompt)
 
-    # 2. Get response from API
+    # 2. Get Response from Backend
     with st.chat_message("assistant"):
-        message_placeholder = st.empty()
-        message_placeholder.markdown("Thinking...")
+        placeholder = st.empty()
+        placeholder.write("Thinking & Reading...")
         
         try:
-            # Call the FastAPI backend
-            response = requests.post(
-                f"{API_URL}/generate", 
+            # Send request to your FastAPI Backend
+            resp = requests.post(
+                f"{BACKEND_URL}/generate", 
                 json={"prompt": prompt},
-                timeout=120 # Give the model time to think
+                timeout=120 # Give the backend time to think
             )
             
-            if response.status_code == 200:
-                answer = response.json()["answer"]
-                message_placeholder.markdown(answer)
+            if resp.status_code == 200:
+                data = resp.json()
+                answer = data["answer"]
+                meta = data.get("meta", {})
+                
+                # Show the answer
+                placeholder.write(answer)
                 st.session_state.messages.append({"role": "assistant", "content": answer})
+                
+                # Show "Thinking Process" (Optional, looks cool!)
+                with st.expander("See Thinking Process"):
+                    st.write(f"⏱️ Duration: {meta.get('duration', 0)}s")
+                    st.write(f"📚 Documents Read: {meta.get('retrieved_docs', 0)}")
+                    
             else:
-                error_msg = f"Error: {response.status_code} - {response.text}"
-                message_placeholder.error(error_msg)
-        
+                placeholder.error(f"Error {resp.status_code}: {resp.text}")
+                
         except Exception as e:
-            message_placeholder.error(f"Connection Error: {e}")
+            placeholder.error(f"Connection Failed. Is the backend running? Error: {e}")
