@@ -31,7 +31,7 @@ RUN pip install --upgrade pip setuptools wheel \
 # 5. Install llama-cpp-python using the official CPU wheel repo
 # (pip will automatically select correct manylinux wheel)
 # ---------------------------------------------------------
-RUN pip install --no-cache-dir llama-cpp-python==0.2.90 \
+RUN pip install llama-cpp-python\
     --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cpu
 
 # ---------------------------------------------------------
