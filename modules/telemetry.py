@@ -8,7 +8,7 @@ import threading
 # --- CONFIG ---
 # This is where we will save the logs
 LOG_DATASET_ID = "vardan10/sokratik-logs" 
-HF_TOKEN = os.getenv("COLAB_WRITE")
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 def _log_worker(prompt: str, answer: str, context: list):
     """

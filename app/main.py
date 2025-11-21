@@ -12,9 +12,10 @@ from contextlib import asynccontextmanager
 from modules.rag_graph import build_graph
 from modules.telemetry import log_interaction
 
+
 # --- CONFIGURATION ---
 REPO_ID = "vardan10/Sokratik-v3-GGUF"
-FILENAME = "Sokratik-v3.Q4_K_M.gguf"
+FILENAME = "Sokratik-v3-q4_k_m.gguf"
 
 # --- LOGGING SETUP ---
 logging.basicConfig(level=logging.INFO)
