@@ -1,0 +1,11 @@
+.venv
+venv
+.env
+
+pycache
+*.pyc
+.DS_Store
+.git
+.gitignore
+llama_cpp
+llama_cpp_python
